@@ -14,35 +14,35 @@ public class SimpleTweener
         BounceOut,
     }
 
-    Method _Method;
-    float _From;
-    float _To;
-    float _Delay;
-    float _Duration;
+    Method _method;
+    float _from;
+    float _to;
+    float _delay;
+    float _duration;
 
-    float _AmountPerDelta;
-    float _X;
-    float _Y;
-    bool _IsFinished;
+    float _amountPerDelta;
+    float _x;
+    float _y;
+    bool _isFinished;
 
-    System.IDisposable _Disposable;
+    System.IDisposable _disposable;
 
     public SimpleTweener(Method method
         , float from, float to, float delay, float duration
         , System.Action<float> onNext, System.Action onCompleted)
     {
-        _Method = method;
-        _From = from;
-        _To = to;
-        _Delay = delay;
-        _Duration = duration;
+        _method = method;
+        _from = from;
+        _to = to;
+        _delay = delay;
+        _duration = duration;
 
-        _AmountPerDelta  = (duration > 0f) ? Mathf.Abs(1f / duration) : 1000f;
-        _X = 0f;
-        _Y = 0f;
-        _IsFinished = false;
+        _amountPerDelta  = (duration > 0f) ? Mathf.Abs(1f / duration) : 1000f;
+        _x = 0f;
+        _y = 0f;
+        _isFinished = false;
 
-        _Disposable = Observable.FromCoroutine<float>(AsyncTween)
+        _disposable = Observable.FromCoroutine<float>(AsyncTween)
             .Subscribe(onNext, onCompleted);
     }
 
@@ -50,19 +50,19 @@ public class SimpleTweener
     {
         observer.OnNext(0f);
 
-        if (_Delay > 0f)
+        if (_delay > 0f)
         {
             float dTime = 0f;
-            while (dTime < _Delay)
+            while (dTime < _delay)
             {
                 dTime += Time.unscaledDeltaTime;
                 yield return null;
             }
         }
         
-        while (_IsFinished == false)
+        while (_isFinished == false)
         {
-            switch (_Method)
+            switch (_method)
             {
                 case Method.Linear:
                     observer.OnNext(Linear());
@@ -91,29 +91,29 @@ public class SimpleTweener
 
     private void OnNext()
     {
-        _X += (_Duration == 0f) ? 1f : _AmountPerDelta * Time.unscaledDeltaTime;
-        _X = Mathf.Clamp01(_X);
-        _IsFinished = (_Duration == 0f || _X >= 1f);
+        _x += (_duration == 0f) ? 1f : _amountPerDelta * Time.unscaledDeltaTime;
+        _x = Mathf.Clamp01(_x);
+        _isFinished = (_duration == 0f || _x >= 1f);
     }
 
     private float Linear()
     {
         OnNext();
-        return Mathf.Lerp(_From, _To, _X);
+        return Mathf.Lerp(_from, _to, _x);
     }
 
     private float EaseIn()
     {
         OnNext();
-        _Y = 1f - Mathf.Sin(0.5f * Mathf.PI * (1f - _X));
-        return Mathf.Lerp(_From, _To, _Y);
+        _y = 1f - Mathf.Sin(0.5f * Mathf.PI * (1f - _x));
+        return Mathf.Lerp(_from, _to, _y);
     }
 
     private float EaseOut()
     {
         OnNext();
-        _Y = Mathf.Sin(0.5f * Mathf.PI * _X);
-        return Mathf.Lerp(_From, _To, _Y);
+        _y = Mathf.Sin(0.5f * Mathf.PI * _x);
+        return Mathf.Lerp(_from, _to, _y);
     }
 
     private float EaseInOut()
@@ -121,22 +121,22 @@ public class SimpleTweener
         OnNext();
 
         const float pi2 = Mathf.PI * 2f;
-        _Y = _X - Mathf.Sin(_X * pi2) / pi2;
-        return Mathf.Lerp(_From, _To, _Y);
+        _y = _x - Mathf.Sin(_x * pi2) / pi2;
+        return Mathf.Lerp(_from, _to, _y);
     }
 
     private float BounceIn()
     {
         OnNext();
-        _Y = BounceLogic(_X);        
-        return Mathf.Lerp(_From, _To, _Y);
+        _y = BounceLogic(_x);        
+        return Mathf.Lerp(_from, _to, _y);
     }
 
     private float BounceOut()
     {
         OnNext();
-        _Y = 1f - BounceLogic(1f - _X);
-        return Mathf.Lerp(_From, _To, _Y);
+        _y = 1f - BounceLogic(1f - _x);
+        return Mathf.Lerp(_from, _to, _y);
     }
 
     private float BounceLogic(float val)
